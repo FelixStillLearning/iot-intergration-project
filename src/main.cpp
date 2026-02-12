@@ -1,6 +1,6 @@
-#include "utils/logger.hpp"
-#include "grpc/sensor_service.hpp"
-#include "websocket/ws_server.hpp"
+#include "utils/logger.h"
+#include "grpc/sensor_service.h"
+#include "websocket/ws_server.h"
 #include <grpcpp/grpcpp.h>
 #include <memory>
 #include <thread> 

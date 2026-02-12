@@ -1,4 +1,4 @@
-#include "sensor_service.hpp"
+#include "sensor_service.h"
 #include <spdlog/spdlog.h>
 
 grpc::Status SensorServiceImpl::SendSensorData(grpc::ServerContext* context, 

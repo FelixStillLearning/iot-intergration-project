@@ -10,9 +10,8 @@ find_package(protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(spdlog REQUIRED) 
 find_package(fmt REQUIRED)
-
 find_package(websocketpp REQUIRED)
-find_package(rapidjson REQUIRED)
+find_package(RapidJSON REQUIRED)
 
 set(PROTO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
 set(PROTO_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
@@ -50,7 +49,7 @@ target_link_libraries(iot_bridge PRIVATE
     spdlog::spdlog 
     fmt::fmt
     websocketpp::websocketpp  
-    rapidjson                 
+    rapidjson                
 )
 
 target_include_directories(iot_bridge PRIVATE 
