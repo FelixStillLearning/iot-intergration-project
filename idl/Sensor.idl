@@ -1,0 +1,15 @@
+module Messengger {
+
+    @Topic
+    struct Message {
+        long sensor_id;
+        string sensor_name;
+        double temperature;
+        double humidity;
+        double pressure;
+        double light_intensity;
+        long long timestamp;   
+        string location;
+        
+    }
+}

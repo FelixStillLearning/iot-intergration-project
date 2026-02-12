@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package iot;
+//service definition untuk gateaway
+service SensorService {
+    //UnaryRPC untuk service laporan kirim sekali
+    rpc SendSensorData (SensorRequest) returns (SensorResponse);
+    //stream sesnor payload (Client can have data stream :maybe for dashboard)
+    rpc StreamSensorData (stream SensorRequest) returns (SensorResponse);
+}
+
+message SensorRequest {
+    int32 sensor_id = 1;
+    string sensor_name = 2;
+    double temperature = 3;
+    double humidity = 4;
+    double pressure = 5;
+    double light_intensity = 6;
+    //waktu data sensor didapat kapan
+    int64 timestamp = 7;
+    string location = 8;
+}
+
+message SensorResponse {
+    bool success = 1;    
+    string message = 2;
+    //lamanya waktu data di proses
+    int64 processed_timestamp = 3;
+}
