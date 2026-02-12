@@ -34,9 +34,11 @@ RUN conan install . --output-folder=build --build=missing
 
 # 5. Copy source code dan rakit biner
 COPY . .
-# Menjalankan CMake menggunakan preset yang dibuat otomatis oleh Conan
-RUN cmake --preset conan-release \
-    && cmake --build --preset conan-release
+# Gunakan toolchain Conan langsung dari output-folder build
+RUN cmake -S . -B build \
+    -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --config Release
 
 # STAGE 2: The Runtime Environment
 FROM ubuntu:22.04
