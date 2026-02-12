@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Service Utama: IoT Bridge (gRPC + WebSocket)
+  iot-bridge:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: iot-bridge-app:v1.0
+    container_name: iot_bridge_container
+    ports:
+      - "50051:50051" # Pintu masuk gRPC (untuk BloomRPC)
+      - "9002:9002"   # Pintu keluar WebSocket (untuk Postman)
+    environment:
+      - LOG_LEVEL=info
+      - GRPC_PORT=50051
+    networks:
+      - iot-internal-network
+    restart: always
+
+  # OpenDDS InfoRepo (Papan Pengumuman Data)
+  # Diperlukan agar Publisher & Subscriber supaya bisa saling menemukan
+  dds-repo:
+    image: ubuntu:22.04
+    container_name: dds_inforepo
+    # Port default IIOP untuk InfoRepo
+    ports:
+      - "12345:12345"
+    command: >
+      /bin/bash -c "echo 'Starting InfoRepo...' && sleep infinity" 
+      # (Catatan: Path biner disesuaikan dengan lokasi instalasi OpenDDS kamu)
+    networks:
+      - iot-internal-network
+
+networks:
+  iot-internal-network:
+    driver: bridge

@@ -1,82 +1,64 @@
-# Use base image (Ubuntu 22.04) as BUILD STAGE
-FROM ubuntu:22.04 AS build
+# STAGE 1: The Build
+FROM ubuntu:22.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install build dependencies with minimal packages
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-        autoconf \
-        bison \
-        build-essential \
-        ca-certificates \
-        curl \
-        flex \
-        g++ \
-        gcc \
-        git \
-        libssl-dev \
-        pkg-config \
-        python3 \
-        python3-pip \
-        tar \
-        unzip \
-        wget \
-        zip \
-        zlib1g-dev && \
-    rm -rf /var/lib/apt/lists/*
+# 1. Install dependencies dasar
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-pip \
+    git \
+    wget \
+    pkg-config \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install CMake using precompiled binary
-ADD https://github.com/Kitware/CMake/releases/download/v3.31.3/cmake-3.31.3-linux-x86_64.tar.gz \
-        cmake-3.31.3-linux-x86_64.tar.gz
-RUN tar -xzf cmake-3.31.3-linux-x86_64.tar.gz && \
-    mv cmake-3.31.3-linux-x86_64 /usr/local/cmake && \
-    ln -s /usr/local/cmake/bin/* /usr/local/bin && \
-    rm cmake-3.31.3-linux-x86_64.tar.gz
+# 2. Ambil CMake terbaru dari Kitware (Sesuai kebutuhan v3.31.0)
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null \
+    && apt-get update \
+    && apt-get install -y cmake \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set a dedicated working directory for your application
+# 3. Setup Conan
+RUN pip3 install conan && conan profile detect --force
+
 WORKDIR /app
 
-# Copy only configuration files first to leverage Docker layer caching
-COPY ./docker/CMakeLists.txt /app/CMakeLists.txt
-COPY ./conanfile.txt /app/conanfile.txt
+# 4. Install library (gRPC, spdlog, dll) lewat Conan (Layer Caching)
+COPY conanfile.txt .
+RUN conan install . --output-folder=build --build=missing
 
-# Install and configure Conan (this layer is cached if these files don’t change)
-RUN pip3 install --no-cache-dir conan && \
-    conan profile detect --force && \
-    conan install . --output-folder=build --build=missing
+# 5. Copy source code dan rakit biner
+COPY . .
+# Menjalankan CMake menggunakan preset yang dibuat otomatis oleh Conan
+RUN cmake --preset conan-release \
+    && cmake --build --preset conan-release
 
-# Configure the project using CMake presets
-RUN cmake --preset conan-release
-
-# Build the project using parallelism
-RUN cmake --build "/app/build" --config Release --target all -j$(nproc)
-
-# Start a new stage, this stage will run programs from the build stage
+# STAGE 2: The Runtime Environment
 FROM ubuntu:22.04
 
-# Create the /app directory
-RUN mkdir -p /app/build/logs
+# Install library runtime yang diperlukan agar biner bisa jalan
+RUN apt-get update && apt-get install -y \
+    libstdc++6 \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/build
+WORKDIR /app
 
-# Copy files from the build stage
-COPY --from=build /app/build/simple-grpc-cpp /app/build/simple-grpc-cpp
+# 6. Copy HANYA biner iot_bridge dari Stage 1
+# Sesuaikan path-nya dengan struktur output CMake preset
+COPY --from=builder /app/build/Release/iot_bridge .
 
-# Set args
-ARG GRPC_PORT
+# 7. Security: Buat user non-root (Standar Pro)
+RUN useradd -ms /bin/bash iotuser
+USER iotuser
 
-# Set exposed ports
-EXPOSE ${GRPC_PORT}
+# Ekspos port gRPC (50051) dan WebSocket (9002)
+EXPOSE 50051 9002
 
-# Create a non-root user for running the application and set permissions to the application directory
-RUN useradd -ms /bin/bash serviceuser && \
-    chown serviceuser:serviceuser -R /app && \
-    chmod -R 500 /app && \
-    chmod -R 700 /app/build/logs
-
-# Switch to the non-root user for improved security
-USER serviceuser
-
-# Run the app
-CMD ["./simple-grpc-cpp"]
+CMD ["./iot_bridge"]
