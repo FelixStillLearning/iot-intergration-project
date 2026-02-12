@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 3.31.0)
 project(iot-integration-project VERSION 0.1.0 LANGUAGES C CXX)
 
-# Pengaturan Standar C++ dan Export Command untuk IDE
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#cari library
 find_package(Threads REQUIRED)
 find_package(protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(spdlog REQUIRED) 
 find_package(fmt REQUIRED)
 
-#konfigurasi prtobuf dan grpc
+find_package(websocketpp REQUIRED)
+find_package(rapidjson REQUIRED)
+
 set(PROTO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
 set(PROTO_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 file(MAKE_DIRECTORY ${PROTO_OUT_DIR})
@@ -35,7 +35,6 @@ add_custom_command(
     COMMENT "Generating gRPC and Protobuf C++ files from sensor.proto"
 )
 
-#MANAJEMEN SOURCE CODE 
 file(GLOB_RECURSE APP_SOURCES "src/*.cpp")
 
 
@@ -44,14 +43,14 @@ add_executable(iot_bridge
     ${PROTO_GEN_FILES}
 )
 
-
-
 target_link_libraries(iot_bridge PRIVATE
     gRPC::grpc++
     protobuf::libprotobuf
     Threads::Threads
     spdlog::spdlog 
     fmt::fmt
+    websocketpp::websocketpp  
+    rapidjson                 
 )
 
 target_include_directories(iot_bridge PRIVATE 
