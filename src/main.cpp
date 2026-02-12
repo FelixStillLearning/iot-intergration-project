@@ -1,9 +1,13 @@
 #include "utils/logger.hpp"
 #include "grpc/sensor_service.hpp"
+#include "websocket/ws_server.hpp"
 #include <grpcpp/grpcpp.h>
 #include <memory>
+#include <thread> 
 
-void RunServer() {
+WsServer g_ws_server;
+
+void RunGrpcServer() {
     std::string server_address("0.0.0.0:50051");
     SensorServiceImpl service;
 
@@ -12,12 +16,21 @@ void RunServer() {
     builder.RegisterService(&service);
 
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-    spdlog::info("IoT Bridge System active at {}", server_address);
+    spdlog::info(" [gRPC] Server active at {}", server_address);
     server->Wait();
+}
+
+void RunWsServer() {
+    spdlog::info(" [WS] Server starting at port 9002");
+    g_ws_server.run(9002); 
 }
 
 int main() {
     utils::init_logger();
-    RunServer();
+    std::thread ws_thread(RunWsServer);
+    ws_thread.detach(); 
+
+    RunGrpcServer();
+
     return 0;
 }
