@@ -3,10 +3,17 @@ syntax = "proto3";
 package iot;
 //service definition untuk gateaway
 service SensorService {
-    //UnaryRPC untuk service laporan kirim sekali
-    rpc SendSensorData (SensorRequest) returns (SensorResponse);
-    //stream sesnor payload (Client can have data stream :maybe for dashboard)
-    rpc StreamSensorData (stream SensorRequest) returns (SensorResponse);
+  // 1. Unary: Kirim satu data, terima satu respon
+  rpc SendSensorData (SensorRequest) returns (SensorResponse);
+
+  // 2. Client Streaming: Kirim banyak data, terima satu ringkasan
+  rpc StreamSensorData (stream SensorRequest) returns (SensorResponse);
+
+  // 3. Server Streaming: Kirim satu perintah, terima data kontinu
+  rpc MonitorSensor (SensorRequest) returns (stream SensorResponse);
+
+  // 4. Bidirectional: Komunikasi dua arah real-time
+  rpc InteractiveSensor (stream SensorRequest) returns (stream SensorResponse);
 }
 
 message SensorRequest {
