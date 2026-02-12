@@ -28,13 +28,12 @@ RUN pip3 install conan && conan profile detect --force
 
 WORKDIR /app
 
-# 4. Install library (gRPC, spdlog, dll) lewat Conan (Layer Caching)
+# 4. Install library 
 COPY conanfile.txt .
 RUN conan install . --output-folder=build --build=missing
 
 # 5. Copy source code dan rakit biner
 COPY . .
-# Gunakan toolchain Conan langsung dari output-folder build
 RUN cmake -S . -B build \
     -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -43,7 +42,7 @@ RUN cmake -S . -B build \
 # STAGE 2: The Runtime Environment
 FROM ubuntu:22.04
 
-# Install library runtime yang diperlukan agar biner bisa jalan
+
 RUN apt-get update && apt-get install -y \
     libstdc++6 \
     ca-certificates \
@@ -52,11 +51,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# 6. Copy HANYA biner iot_bridge dari Stage 1
-# Sesuaikan path-nya dengan struktur output CMake preset
-COPY --from=builder /app/build/Release/iot_bridge .
+COPY --from=builder /app/build/iot_bridge .
 
-# 7. Security: Buat user non-root (Standar Pro)
 RUN useradd -ms /bin/bash iotuser
 USER iotuser
 

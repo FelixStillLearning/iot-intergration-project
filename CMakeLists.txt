@@ -34,13 +34,16 @@ add_custom_command(
     COMMENT "Generating gRPC and Protobuf C++ files from sensor.proto"
 )
 
-file(GLOB_RECURSE APP_SOURCES "src/*.cpp")
+file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 
 
 add_executable(iot_bridge 
     ${APP_SOURCES} 
     ${PROTO_GEN_FILES}
 )
+
+# Ensure ws_server implementation is always compiled
+target_sources(iot_bridge PRIVATE src/websocket/ws_server.cpp)
 
 target_link_libraries(iot_bridge PRIVATE
     gRPC::grpc++
