@@ -26,7 +26,7 @@ class SensorServiceImpl final : public SensorService::Service {
         cout << "Humidity    : " <<request->humidity() << endl;
         cout << "Location    : " <<request->location() << endl;
         
-        response->set_succes(true);
+        response->set_success(true);
         response->set_message("Data recieved and connected");
 
         return Status::OK;
@@ -39,7 +39,7 @@ void RunServer() {
 
     ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-    builder.Registerservice(&service);
+    builder.RegisterService(&service);
 
     unique_ptr<Server> server(builder.BuildAndStart());
     cout << "Gateway Bridge is running on : " << server_address << endl;
