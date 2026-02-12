@@ -1,53 +1,23 @@
-#include <iostream> 
-#include <memory>
-#include <string>
-
-#include "sensor.grpc.pb.h"
+#include "utils/logger.hpp"
+#include "grpc/sensor_service.hpp"
 #include <grpcpp/grpcpp.h>
-
-using std::string;
-using std::unique_ptr;
-
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::Status;
-using iot::SensorService;
-using iot::SensorRequest;
-using iot::SensorResponse;
-
-class SensorServiceImpl final : public SensorService::Service {
-    Status SendSensorData (ServerContext* context, const SensorRequest* request, SensorResponse* response) override {
-        spdlog::info("=== Incoming Data Received ===");
-        spdlog::info("Sensor ID   : {}", request->sensor_id());
-        spdlog::info("Temperature : {} C", request->temperature());
-        spdlog::info("Humidity    : {} %", request->humidity());
-        spdlog::info("Location    : {}", request->location());
-        
-        response->set_success(true);
-        response->set_message("Data recieved and connected");
-
-        return Status::OK;
-    }
-};
+#include <memory>
 
 void RunServer() {
-    string server_address("0.0.0.0:50051");
-    SensorServiceImpl service:
+    std::string server_address("0.0.0.0:50051");
+    SensorServiceImpl service;
 
-    ServerBuilder builder;
+    grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
 
-    unique_ptr<Server> server(builder.BuildAndStart());
-    cout << "Gateway Bridge is running on : " << server_address << endl;
-
+    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+    spdlog::info("IoT Bridge System active at {}", server_address);
     server->Wait();
 }
- 
+
 int main() {
-    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
-    
+    utils::init_logger();
     RunServer();
     return 0;
 }
