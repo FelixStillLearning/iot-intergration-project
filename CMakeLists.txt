@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(threads REQUIRED)
 find_package(protobuf REQUIRED)
 find_package(gRPC REQUIRED)
+find_package(spdlog REQUIRED) 
+find_package(fmt REQUIRED)
 
 #lOKASI FOLDER
 set(PROTO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
@@ -37,6 +39,8 @@ target_link_libraries(iot_bridge PRIVATE
     gRPC::grpc++
     protobuf::libprotobuf
     Threads::Threads
+    spdlog::spdlog 
+    fmt::fmt
     
 )
 

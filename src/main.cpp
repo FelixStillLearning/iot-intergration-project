@@ -1,12 +1,10 @@
 #include <iostream> 
 #include <memory>
-#include <String>
+#include <string>
 
 #include "sensor.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
 
-using std::cout;
-using std::endl;
 using std::string;
 using std::unique_ptr;
 
@@ -20,11 +18,11 @@ using iot::SensorResponse;
 
 class SensorServiceImpl final : public SensorService::Service {
     Status SendSensorData (ServerContext* context, const SensorRequest* request, SensorResponse* response) override {
-        cout << "Incoming Data :" << endl;
-        cout << "Sensor ID   : " <<request->sensor_id() << endl;
-        cout << "Temperature : " <<request->temperature() << endl;
-        cout << "Humidity    : " <<request->humidity() << endl;
-        cout << "Location    : " <<request->location() << endl;
+        spdlog::info("=== Incoming Data Received ===");
+        spdlog::info("Sensor ID   : {}", request->sensor_id());
+        spdlog::info("Temperature : {} C", request->temperature());
+        spdlog::info("Humidity    : {} %", request->humidity());
+        spdlog::info("Location    : {}", request->location());
         
         response->set_success(true);
         response->set_message("Data recieved and connected");
@@ -48,6 +46,8 @@ void RunServer() {
 }
  
 int main() {
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+    
     RunServer();
     return 0;
 }
