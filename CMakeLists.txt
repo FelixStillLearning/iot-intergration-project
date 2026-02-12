@@ -5,7 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 
 #CARI LIBRARY
-find_package(threads REQUIRED)
+find_package(Threads REQUIRED)
 find_package(protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(spdlog REQUIRED) 
