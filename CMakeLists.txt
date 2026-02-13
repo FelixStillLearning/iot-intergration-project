@@ -3,15 +3,24 @@ project(iot-integration-project VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(CTest)
+enable_testing()
 
 find_package(Threads REQUIRED)
-find_package(protobuf REQUIRED)
-find_package(gRPC REQUIRED)
-find_package(spdlog REQUIRED) 
+find_package(absl CONFIG REQUIRED)             
+find_package(Boost REQUIRED COMPONENTS thread)  
+find_package(spdlog CONFIG REQUIRED) 
 find_package(fmt REQUIRED)
-find_package(websocketpp REQUIRED)
 find_package(RapidJSON REQUIRED)
+find_package(protobuf CONFIG REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+find_package(websocketpp REQUIRED)             
+find_package(libuv CONFIG REQUIRED) 
+find_package(absl CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS thread)
+find_package(libuv CONFIG REQUIRED)            
+
 
 set(PROTO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
 set(PROTO_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
@@ -34,30 +43,56 @@ add_custom_command(
     COMMENT "Generating gRPC and Protobuf C++ files from sensor.proto"
 )
 
-file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 
+file(GLOB_RECURSE SOURCES src/*.cpp src/*.cc src/*.h src/*.hpp)
 
-add_executable(iot_bridge 
-    ${APP_SOURCES} 
-    ${PROTO_GEN_FILES}
+list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
+
+add_library(iot-core-objects OBJECT ${SOURCES} ${PROTO_GEN_FILES})
+
+include_directories(src)
+include_directories(${PROTO_OUT_DIR})
+include_directories(${absl_INCLUDE_DIR})   
+include_directories(${Boost_INCLUDE_DIR})  
+include_directories(${libuv_INCLUDE_DIR})  
+include_directories(${spdlog_INCLUDE_DIR}) 
+include_directories(${fmt_INCLUDE_DIR})
+include_directories(
+    "$ENV{OPENDDS_HOME}"
+    "$ENV{ACE_ROOT}"
+    "$ENV{TAO_ROOT}"
+)
+link_directories(
+    "$ENV{OPENDDS_HOME}/lib"
+    "$ENV{ACE_ROOT}/lib"
 )
 
-# Ensure ws_server implementation is always compiled
-target_sources(iot_bridge PRIVATE src/websocket/ws_server.cpp)
+add_executable(iot_bridge src/app.cpp $<TARGET_OBJECTS:iot-core-objects>)
 
 target_link_libraries(iot_bridge PRIVATE
-    gRPC::grpc++
-    protobuf::libprotobuf
+
     Threads::Threads
+    abseil::abseil              
+    Boost::boost Boost::thread  
     spdlog::spdlog 
     fmt::fmt
-    websocketpp::websocketpp  
-    rapidjson                
+    rapidjson
+
+    OpenDDS_Dcps
+    TAO_ValueType
+    TAO
+    ACE
+
+    gRPC::grpc++ gRPC::grpc++_alts 
+    protobuf::libprotobuf
+    websocketpp::websocketpp
+    libuv::libuv 
+    Boost::boost
+    Boost::thread
+    abseil::abseil               
 )
 
-target_include_directories(iot_bridge PRIVATE 
-    src/
-    ${PROTO_OUT_DIR}
-)
 
-target_include_directories(iot_bridge SYSTEM PUBLIC ${PROTO_OUT_DIR})
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)
