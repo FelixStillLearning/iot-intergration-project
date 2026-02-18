@@ -23,7 +23,9 @@ export $(grep -v '^#' .env | xargs)
 
 ## Build
 ```
-cmake -S . -B build
+rm -rf build
+conan install . --output-folder=build --build=missing
+cmake --preset conan-release
 cmake --build build -j
 ```
 

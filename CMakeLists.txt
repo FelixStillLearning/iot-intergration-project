@@ -54,6 +54,31 @@ list(REMOVE_ITEM SOURCES ${NEED_TO_REFACTOR})
 
 add_library(iot-core-objects OBJECT ${SOURCES} ${PROTO_GEN_FILES})
 
+target_link_libraries(iot-core-objects PRIVATE
+    Threads::Threads
+    abseil::abseil
+    Boost::boost
+    Boost::thread
+    spdlog::spdlog
+    fmt::fmt
+    rapidjson
+
+    OpenDDS_Dcps
+    TAO_ValueType
+    TAO
+    ACE
+
+    gRPC::grpc++ gRPC::grpc++_alts
+    protobuf::libprotobuf
+    websocketpp::websocketpp
+    libuv::uv_a
+    abseil::abseil
+    usockets::usockets
+    ZLIB::ZLIB
+    uv
+    z
+)
+
 include_directories(src)
 include_directories(${PROTO_OUT_DIR})
 include_directories(${absl_INCLUDE_DIR})   
@@ -95,7 +120,7 @@ target_link_libraries(iot_bridge PRIVATE
     gRPC::grpc++ gRPC::grpc++_alts 
     protobuf::libprotobuf
     websocketpp::websocketpp
-    libuv::libuv 
+    libuv::uv_a 
     abseil::abseil               
     usockets::usockets   
     ZLIB::ZLIB           

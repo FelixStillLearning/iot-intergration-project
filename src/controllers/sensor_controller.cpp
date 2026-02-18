@@ -1,5 +1,5 @@
 #include "sensor_controller.h"
-#include "adapters/bridge_manager.h"
+#include "adapters/service_adapters/bridge_manager.h"
 #include <spdlog/spdlog.h>
 #include <chrono>
 #include <thread>

@@ -10,14 +10,16 @@ DdsPublisher::DdsPublisher()
 DdsPublisher::~DdsPublisher() {
     if (!CORBA::is_nil(participant_.in())) {
         participant_->delete_contained_entities();
-        DDS::DomainParticipantFactory_var dpf = DDS::TheDomainParticipantFactory;
-        dpf->delete_participant(participant_.in());
+        DDS::DomainParticipantFactory_var dpf = TheParticipantFactory;
+        if (!CORBA::is_nil(dpf.in())) {
+            dpf->delete_participant(participant_.in());
+        }
     }
 }
 
 bool DdsPublisher::init(int argc, char* argv[]) {
     try {
-        DDS::DomainParticipantFactory_var dpf = DDS::TheDomainParticipantFactory;
+        DDS::DomainParticipantFactory_var dpf = TheParticipantFactoryWithArgs(argc, argv);
         
         if (CORBA::is_nil(dpf.in())) {
             spdlog::error("DDS: DomainParticipantFactory is nil");

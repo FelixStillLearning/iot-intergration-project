@@ -10,7 +10,7 @@ namespace utils {
         doc.SetObject();
         rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
 
-        doc.AddMember("sensor_id", rapidjson::Value(request->sensor_id().c_str(), allocator).Move(), allocator);
+        doc.AddMember("sensor_id", request->sensor_id(), allocator);
         doc.AddMember("temperature", request->temperature(), allocator);
         doc.AddMember("humidity", request->humidity(), allocator);
         doc.AddMember("location", rapidjson::Value(request->location().c_str(), allocator).Move(), allocator);
