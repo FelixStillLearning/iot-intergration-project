@@ -1,0 +1,39 @@
+#!/bin/bash
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <FILE_NAME>"
+    exit 1
+fi
+
+PROTO_FILE_NAME="$1.proto"
+
+# Prefer system PATH
+PROTOC="$(command -v protoc 2>/dev/null)"
+GRPC_CPP_PLUGIN="$(command -v grpc_cpp_plugin 2>/dev/null)"
+
+# Fallback to Conan cache
+PROTOC_CONAN_GLOB="/home/felixrdev/.conan2/p/b/proto*/p/bin/protoc"
+GRPC_CPP_PLUGIN_CONAN_GLOB="/home/felixrdev/.conan2/p/b/grpc*/p/bin/grpc_cpp_plugin"
+
+if [ -z "$PROTOC" ]; then
+    PROTOC=$(ls -1 $PROTOC_CONAN_GLOB 2>/dev/null | head -n1)
+fi
+
+if [ -z "$GRPC_CPP_PLUGIN" ]; then
+    GRPC_CPP_PLUGIN=$(ls -1 $GRPC_CPP_PLUGIN_CONAN_GLOB 2>/dev/null | head -n1)
+fi
+
+if [ ! -f "$PROTOC" ]; then
+    echo "Error: Protoc not found!"
+    exit 1
+fi
+
+if [ ! -f "$GRPC_CPP_PLUGIN" ]; then
+    echo "Error: gRPC plugin not found!"
+    exit 1
+fi
+
+"$PROTOC" -I ./ --grpc_out=./ --plugin=protoc-gen-grpc="$GRPC_CPP_PLUGIN" "$PROTO_FILE_NAME"
+"$PROTOC" -I ./ --cpp_out=. "$PROTO_FILE_NAME"
+
+echo "Execution completed."

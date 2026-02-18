@@ -1,31 +1,27 @@
 services:
-  # Service Utama: IoT Bridge (gRPC + WebSocket)
+  # Service Utama: IoT Bridge (gRPC + WebSocket + DDS RTPS)
   iot-bridge:
     build: 
       context: .
       dockerfile: Dockerfile
     image: iot-bridge-app:v1.0
     container_name: iot_bridge_container
+    env_file:
+      - .env
     ports:
-      - "50051:50051"
-      - "9002:9002"
+      - "${GRPC_PORT}:${GRPC_PORT}"
+      - "${WS_PORT}:${WS_PORT}"
     environment:
-      - LOG_LEVEL=info
-      - GRPC_PORT=50051
+      - GRPC_HOST=${GRPC_HOST}
+      - GRPC_PORT=${GRPC_PORT}
+      - WS_PORT=${WS_PORT}
+      - DDS_DOMAIN=${DDS_DOMAIN}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DDS_CONFIG_FILE=${DDS_CONFIG_FILE}
+      - TEST_TOPIC=${TEST_TOPIC}
     networks:
       - iot-internal-network
     restart: always
-
-  # OpenDDS InfoRepo
-  dds-repo:
-    image: ubuntu:22.04
-    container_name: dds_inforepo
-    ports:
-      - "12345:12345"
-    # Perbaikan: Menggunakan format array agar tidak error decoding
-    command: ["/bin/bash", "-c", "echo 'Starting InfoRepo...' && sleep infinity"]
-    networks:
-      - iot-internal-network
 
 networks:
   iot-internal-network:

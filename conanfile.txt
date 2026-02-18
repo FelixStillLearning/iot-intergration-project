@@ -1,20 +1,17 @@
 [requires]
-# Core Communication (gRPC & Protobuf)
 grpc/1.54.3
 protobuf/3.21.12
-
-# Professional Logging & Formatting
 fmt/10.2.1
 spdlog/1.14.1
-
-# High-Performance C++ Libraries
 abseil/20230802.1
 boost/1.83.0
 libuv/1.46.0
-
-# Utilities & Testing
 zlib/1.3.1
 gtest/1.14.0
+websocketpp/0.8.2
+uwebsockets/20.62.0
+rapidjson/1.1.0
+openssl/3.2.0
 
 [generators]
 CMakeDeps
