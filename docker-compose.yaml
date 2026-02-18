@@ -1,5 +1,5 @@
 services:
-  # Service Utama: IoT Bridge (gRPC + WebSocket)
+  # Service Utama: IoT Bridge (gRPC + WebSocket + DDS RTPS)
   iot-bridge:
     build: 
       context: .
@@ -17,24 +17,11 @@ services:
       - WS_PORT=${WS_PORT}
       - DDS_DOMAIN=${DDS_DOMAIN}
       - LOG_LEVEL=${LOG_LEVEL}
-      - IOR_PATH=${IOR_PATH}
-      - RTPS_PATH=${RTPS_PATH}
+      - DDS_CONFIG_FILE=${DDS_CONFIG_FILE}
       - TEST_TOPIC=${TEST_TOPIC}
     networks:
       - iot-internal-network
     restart: always
-
-  # OpenDDS InfoRepo
-  dds-repo:
-    image: ubuntu:22.04
-    container_name: dds_inforepo
-    env_file:
-      - .env
-    ports:
-      - "${INFO_REPO_PORT}:${INFO_REPO_PORT}"
-    command: ["/bin/bash", "-c", "echo 'Starting InfoRepo...' && sleep infinity"]
-    networks:
-      - iot-internal-network
 
 networks:
   iot-internal-network:

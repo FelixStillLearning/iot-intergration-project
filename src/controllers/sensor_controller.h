@@ -1,5 +1,6 @@
 #pragma once
 #include "sensor.grpc.pb.h"
+#include "adapters/abstract_adapters/observable/observable.h"
 #include <grpcpp/grpcpp.h>
 #include <spdlog/spdlog.h>
 #include <thread>
@@ -8,7 +9,25 @@
 
 class BridgeManager;
 
-class SensorController final : public iot::SensorService::Service {
+/**
+ * SensorController — gRPC Service + Observable
+ * 
+ * Class ini menggabungkan DUA peran:
+ *   1. gRPC Service  (extends SensorService::Service) → handle RPC calls
+ *   2. Observable     (extends Observable)             → notify observers
+ * 
+ * Alur data:
+ *   gRPC Request masuk
+ *       → SensorController menerima
+ *           → notify_observers(request)    ← Observer Pattern (log, validate, dll)
+ *           → bridge_->broadcast(request)  ← Bridge Pattern (WebSocket, DDS)
+ * 
+ * Dengan ini, SensorController TIDAK perlu tahu:
+ *   - Berapa banyak observer yang terdaftar
+ *   - Apa yang dilakukan setiap observer
+ *   - Observer bisa ditambah/dihapus tanpa mengubah class ini
+ */
+class SensorController final : public iot::SensorService::Service, public Observable {
 public:
     explicit SensorController(std::shared_ptr<BridgeManager> bridge);
 

@@ -5,11 +5,14 @@
 #include "adapters/service_adapters/bridge_manager.h"
 #include "adapters/service_adapters/websocket_adapters/websocket_adapter.h"
 #include "adapters/service_adapters/dds_adapters/dds_adapter.h"
+#include "handlers/sensor_data_log_handler/sensor_data_log_handler.h"
+#include "handlers/sensor_data_validator/sensor_data_validator.h"
 #include <grpcpp/grpcpp.h>
 #include <memory>
 #include <thread>
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 namespace {
 std::shared_ptr<WsServer> g_ws_server;
@@ -41,6 +44,14 @@ void run_grpc_server() {
     int port = get_env_int("GRPC_PORT", 50051);
     std::string server_address = host + ":" + std::to_string(port);
     auto service = std::make_shared<SensorController>(g_bridge);
+
+    auto log_handler = std::make_shared<SensorDataLogHandler>();
+    auto validator   = std::make_shared<SensorDataValidator>();
+
+    service->add_observer(log_handler);  
+    service->add_observer(validator);     
+
+    spdlog::info("Observers: Registered {} handler(s) to SensorController", 2);
 
     grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
@@ -76,7 +87,21 @@ int main(int argc, char* argv[]) {
     g_ws_server = std::make_shared<WsServer>();
     g_dds_pub = std::make_shared<DdsPublisher>();
     
-    if (!g_dds_pub->init(argc, argv)) {
+    std::string config_path = get_env_string("DDS_CONFIG_FILE", "rtps.ini");
+    std::vector<std::string> arg_strings;
+    std::vector<char*> new_argv;
+    for (int i = 0; i < argc; ++i) {
+        arg_strings.push_back(argv[i]);
+    }
+    arg_strings.push_back("-DCPSConfigFile");
+    arg_strings.push_back(config_path);
+    for (auto& s : arg_strings) {
+        new_argv.push_back(&s[0]);
+    }
+    new_argv.push_back(nullptr);
+    int new_argc = static_cast<int>(new_argv.size() - 1);
+
+    if (!g_dds_pub->init(new_argc, new_argv.data())) {
         spdlog::error("Failed to initialize DDS Publisher");
         return 1;
     }

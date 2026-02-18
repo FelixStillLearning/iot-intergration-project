@@ -14,6 +14,12 @@ grpc::Status SensorController::SendSensorData(grpc::ServerContext* context,
     spdlog::info("Incoming gRPC -> Sensor ID: {}, Temp: {}C", 
                  request->sensor_id(), request->temperature());
     
+    // ★ OBSERVER PATTERN: Notify semua observer (LogHandler, Validator, dll)
+    // Observer bereaksi SEBELUM data dikirim ke transport adapters.
+    // Ini memungkinkan validasi/logging tanpa mengubah code di sini.
+    notify_observers(*request);
+    
+    // ★ BRIDGE PATTERN: Broadcast ke semua transport adapters (WebSocket, DDS)
     if (bridge_) {
         bridge_->broadcast_sensor_data(*request);
     }
@@ -33,6 +39,11 @@ grpc::Status SensorController::StreamSensorData(
     int count = 0;
     while (reader->Read(&request)) {
         spdlog::info("[Stream] Sensor ID: {}, Temp: {}C", request.sensor_id(), request.temperature());
+
+        // ★ OBSERVER: Notify untuk setiap message dalam stream
+        notify_observers(request);
+
+        // ★ BRIDGE: Broadcast ke adapters
         if (bridge_) {
             bridge_->broadcast_sensor_data(request);
         }
@@ -87,6 +98,11 @@ grpc::Status SensorController::InteractiveSensor(
 
     while (stream->Read(&request)) {
         spdlog::info("[Interactive] Received Sensor ID: {} from {}", request.sensor_id(), request.location());
+
+        // ★ OBSERVER: Notify untuk setiap message dalam bidirectional stream
+        notify_observers(request);
+
+        // ★ BRIDGE: Broadcast ke adapters
         if (bridge_) {
             bridge_->broadcast_sensor_data(request);
         }

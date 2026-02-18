@@ -1,6 +1,6 @@
 module Messengger {
 
-    @Topic
+    @topic
     struct Message {
         long sensor_id;
         string sensor_name;
@@ -10,6 +10,5 @@ module Messengger {
         double light_intensity;
         long long timestamp;   
         string location;
-        
-    }
-}
+    };
+};

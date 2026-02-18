@@ -1,21 +1,30 @@
 #include "ws_server.h"
 #include <websocketpp/common/connection_hdl.hpp>
 #include <functional>
+#include <spdlog/spdlog.h>
 
 WsServer::WsServer() {
     m_server.clear_access_channels(websocketpp::log::alevel::all);
     m_server.clear_error_channels(websocketpp::log::elevel::all);
 
     m_server.init_asio();
+    m_server.set_reuse_addr(true);
 
     m_server.set_open_handler(std::bind(&WsServer::on_open, this, std::placeholders::_1));
     m_server.set_close_handler(std::bind(&WsServer::on_close, this, std::placeholders::_1));
 }
 
 void WsServer::run(uint16_t port) {
-    m_server.listen(port);
-    m_server.start_accept();
-    m_server.run();
+    try {
+        m_server.listen(port);
+        m_server.start_accept();
+        spdlog::info("[WebSocket] Listening on port {}", port);
+        m_server.run();
+    } catch (const websocketpp::exception& e) {
+        spdlog::error("[WebSocket] Failed to start: {}", e.what());
+    } catch (const std::exception& e) {
+        spdlog::error("[WebSocket] Error: {}", e.what());
+    }
 }
 
 void WsServer::broadcast(const std::string& message) {

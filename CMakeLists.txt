@@ -45,6 +45,15 @@ add_custom_command(
     COMMENT "Generating gRPC and Protobuf C++ files from sensor.proto"
 )
 
+# OpenDDS IDL generated sources (pre-generated via ./generate_idl)
+set(IDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/idl/SensorData)
+set(IDL_GEN_FILES
+    "${IDL_DIR}/SensorDataC.cpp"
+    "${IDL_DIR}/SensorDataS.cpp"
+    "${IDL_DIR}/SensorDataTypeSupportC.cpp"
+    "${IDL_DIR}/SensorDataTypeSupportS.cpp"
+    "${IDL_DIR}/SensorDataTypeSupportImpl.cpp"
+)
 
 file(GLOB_RECURSE SOURCES src/*.cpp src/*.cc src/*.h src/*.hpp)
 
@@ -52,7 +61,7 @@ list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/app.cpp)
 file(GLOB_RECURSE NEED_TO_REFACTOR src/need_to_refactor/*)
 list(REMOVE_ITEM SOURCES ${NEED_TO_REFACTOR})
 
-add_library(iot-core-objects OBJECT ${SOURCES} ${PROTO_GEN_FILES})
+add_library(iot-core-objects OBJECT ${SOURCES} ${PROTO_GEN_FILES} ${IDL_GEN_FILES})
 
 target_link_libraries(iot-core-objects PRIVATE
     Threads::Threads
@@ -64,7 +73,7 @@ target_link_libraries(iot-core-objects PRIVATE
     rapidjson
 
     OpenDDS_Dcps
-    TAO_ValueType
+    TAO_Valuetype
     TAO
     ACE
 
@@ -81,6 +90,7 @@ target_link_libraries(iot-core-objects PRIVATE
 
 include_directories(src)
 include_directories(${PROTO_OUT_DIR})
+include_directories(${IDL_DIR})
 include_directories(${absl_INCLUDE_DIR})   
 include_directories(${Boost_INCLUDE_DIR})  
 include_directories(${libuv_INCLUDE_DIR})  
@@ -113,7 +123,7 @@ target_link_libraries(iot_bridge PRIVATE
     rapidjson
 
     OpenDDS_Dcps
-    TAO_ValueType
+    TAO_Valuetype
     TAO
     ACE
 

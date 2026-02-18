@@ -3,7 +3,9 @@
 #include <dds/DCPS/Marked_Default_Qos.h>
 #include <dds/DCPS/Service_Participant.h>
 #include <dds/DCPS/WaitSet.h>
+#include "SensorDataTypeSupportImpl.h"
 #include <memory>
+#include <string>
 
 class DdsPublisher {
 public:
@@ -18,4 +20,5 @@ private:
     DDS::DomainParticipant_var participant_;
     DDS::Topic_var topic_;
     DDS::Publisher_var publisher_;
+    Messengger::MessageDataWriter_var writer_;
 };
