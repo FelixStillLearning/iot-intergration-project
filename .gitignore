@@ -50,6 +50,7 @@ graph_info.json
 .vscode/settings.json
 
 # Environment (local overrides only)
+.env
 .env.local
 .env.*.local
 

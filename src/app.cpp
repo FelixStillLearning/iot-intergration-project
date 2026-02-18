@@ -8,14 +8,38 @@
 #include <grpcpp/grpcpp.h>
 #include <memory>
 #include <thread>
+#include <cstdlib>
+#include <string>
 
 namespace {
 std::shared_ptr<WsServer> g_ws_server;
 std::shared_ptr<DdsPublisher> g_dds_pub;
 std::shared_ptr<BridgeManager> g_bridge;
 
+std::string get_env_string(const char* name, const std::string& fallback) {
+    const char* value = std::getenv(name);
+    if (value && *value) {
+        return std::string(value);
+    }
+    return fallback;
+}
+
+int get_env_int(const char* name, int fallback) {
+    const char* value = std::getenv(name);
+    if (!value || !*value) {
+        return fallback;
+    }
+    try {
+        return std::stoi(value);
+    } catch (...) {
+        return fallback;
+    }
+}
+
 void run_grpc_server() {
-    std::string server_address("0.0.0.0:50051");
+    std::string host = get_env_string("GRPC_HOST", "0.0.0.0");
+    int port = get_env_int("GRPC_PORT", 50051);
+    std::string server_address = host + ":" + std::to_string(port);
     auto service = std::make_shared<SensorController>(g_bridge);
 
     grpc::ServerBuilder builder;
@@ -28,8 +52,9 @@ void run_grpc_server() {
 }
 
 void run_ws_server() {
-    spdlog::info("[WebSocket] Server starting at port 9002");
-    g_ws_server->run(9002);
+    int port = get_env_int("WS_PORT", 9002);
+    spdlog::info("[WebSocket] Server starting at port {}", port);
+    g_ws_server->run(static_cast<uint16_t>(port));
 }
 
 void init_bridge() {

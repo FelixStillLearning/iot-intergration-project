@@ -56,7 +56,4 @@ COPY --from=builder /app/build/iot_bridge .
 RUN useradd -ms /bin/bash iotuser
 USER iotuser
 
-# Ekspos port gRPC (50051) dan WebSocket (9002)
-EXPOSE 50051 9002
-
 CMD ["./iot_bridge"]

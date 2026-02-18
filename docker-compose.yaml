@@ -6,12 +6,20 @@ services:
       dockerfile: Dockerfile
     image: iot-bridge-app:v1.0
     container_name: iot_bridge_container
+    env_file:
+      - .env
     ports:
       - "${GRPC_PORT}:${GRPC_PORT}"
       - "${WS_PORT}:${WS_PORT}"
     environment:
-      - LOG_LEVEL=info
-      - GRPC_PORT={GRPC_PORT}
+      - GRPC_HOST=${GRPC_HOST}
+      - GRPC_PORT=${GRPC_PORT}
+      - WS_PORT=${WS_PORT}
+      - DDS_DOMAIN=${DDS_DOMAIN}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - IOR_PATH=${IOR_PATH}
+      - RTPS_PATH=${RTPS_PATH}
+      - TEST_TOPIC=${TEST_TOPIC}
     networks:
       - iot-internal-network
     restart: always
@@ -20,6 +28,8 @@ services:
   dds-repo:
     image: ubuntu:22.04
     container_name: dds_inforepo
+    env_file:
+      - .env
     ports:
       - "${INFO_REPO_PORT}:${INFO_REPO_PORT}"
     command: ["/bin/bash", "-c", "echo 'Starting InfoRepo...' && sleep infinity"]
