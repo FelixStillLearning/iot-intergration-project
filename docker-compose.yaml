@@ -7,11 +7,11 @@ services:
     image: iot-bridge-app:v1.0
     container_name: iot_bridge_container
     ports:
-      - "50051:50051"
-      - "9002:9002"
+      - "${GRPC_PORT}:${GRPC_PORT}"
+      - "${WS_PORT}:${WS_PORT}"
     environment:
       - LOG_LEVEL=info
-      - GRPC_PORT=50051
+      - GRPC_PORT={GRPC_PORT}
     networks:
       - iot-internal-network
     restart: always
@@ -21,8 +21,7 @@ services:
     image: ubuntu:22.04
     container_name: dds_inforepo
     ports:
-      - "12345:12345"
-    # Perbaikan: Menggunakan format array agar tidak error decoding
+      - "${INFO_REPO_PORT}:${INFO_REPO_PORT}"
     command: ["/bin/bash", "-c", "echo 'Starting InfoRepo...' && sleep infinity"]
     networks:
       - iot-internal-network

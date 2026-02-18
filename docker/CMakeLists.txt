@@ -49,8 +49,6 @@ add_custom_command(
 file(GLOB_RECURSE SOURCES src/*.cpp src/*.cc src/*.h src/*.hpp)
 
 list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/app.cpp)
-file(GLOB_RECURSE NEED_TO_REFACTOR src/need_to_refactor/*)
-list(REMOVE_ITEM SOURCES ${NEED_TO_REFACTOR})
 
 add_library(iot-core-objects OBJECT ${SOURCES} ${PROTO_GEN_FILES})
 

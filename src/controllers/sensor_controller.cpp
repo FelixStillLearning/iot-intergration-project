@@ -1,22 +1,29 @@
-#include "sensor_service.h"
+#include "sensor_controller.h"
+#include "adapters/bridge_manager.h"
 #include <spdlog/spdlog.h>
 #include <chrono>
-#include <thread> // Wajib untuk std::this_thread::sleep_for
+#include <thread>
 
-// 1. UNARY RPC: Satu Request, Satu Response
-grpc::Status SensorServiceImpl::SendSensorData(grpc::ServerContext* context, 
+SensorController::SensorController(std::shared_ptr<BridgeManager> bridge)
+    : bridge_(bridge) {
+}
+
+grpc::Status SensorController::SendSensorData(grpc::ServerContext* context, 
                                              const iot::SensorRequest* request, 
                                              iot::SensorResponse* response) {
     spdlog::info("Incoming gRPC -> Sensor ID: {}, Temp: {}C", 
                  request->sensor_id(), request->temperature());
+    
+    if (bridge_) {
+        bridge_->broadcast_sensor_data(*request);
+    }
     
     response->set_success(true);
     response->set_message("Bridge: Data processed successfully");
     return grpc::Status::OK;
 }
 
-// 2. CLIENT STREAMING: Banyak Request, Satu Response
-grpc::Status SensorServiceImpl::StreamSensorData(
+grpc::Status SensorController::StreamSensorData(
     grpc::ServerContext* context,
     grpc::ServerReader<iot::SensorRequest>* reader,
     iot::SensorResponse* response) {
@@ -26,6 +33,9 @@ grpc::Status SensorServiceImpl::StreamSensorData(
     int count = 0;
     while (reader->Read(&request)) {
         spdlog::info("[Stream] Sensor ID: {}, Temp: {}C", request.sensor_id(), request.temperature());
+        if (bridge_) {
+            bridge_->broadcast_sensor_data(request);
+        }
         ++count;
     }
 
@@ -40,15 +50,13 @@ grpc::Status SensorServiceImpl::StreamSensorData(
     return grpc::Status::OK;
 }
 
-// 3. SERVER STREAMING: Satu Request, Banyak Response (Monitor)
-grpc::Status SensorServiceImpl::MonitorSensor(
+grpc::Status SensorController::MonitorSensor(
     grpc::ServerContext* context,
     const iot::SensorRequest* request,
     grpc::ServerWriter<iot::SensorResponse>* writer) {
     
     spdlog::info("[Monitor] Starting stream for Sensor ID: {}", request->sensor_id());
 
-    // Simulasi pengiriman data kontinu sebanyak 5 kali
     for (int i = 1; i <= 5; ++i) {
         if (context->IsCancelled()) {
             return grpc::Status::CANCELLED;
@@ -61,27 +69,27 @@ grpc::Status SensorServiceImpl::MonitorSensor(
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count());
 
-        writer->Write(res); // Mengirim pesan ke client stream
+        writer->Write(res);
         spdlog::info("[Monitor] Sent update #{} to client", i);
 
-        // Jeda 1 detik antar pengiriman
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     return grpc::Status::OK;
 }
 
-// 4. BIDIRECTIONAL STREAMING: Banyak Request, Banyak Response (Interactive)
-grpc::Status SensorServiceImpl::InteractiveSensor(
+grpc::Status SensorController::InteractiveSensor(
     grpc::ServerContext* context,
     grpc::ServerReaderWriter<iot::SensorResponse, iot::SensorRequest>* stream) {
     
     iot::SensorRequest request;
     spdlog::info("[Interactive] Session started");
 
-    // Server membaca request dan langsung membalas
     while (stream->Read(&request)) {
         spdlog::info("[Interactive] Received Sensor ID: {} from {}", request.sensor_id(), request.location());
+        if (bridge_) {
+            bridge_->broadcast_sensor_data(request);
+        }
 
         iot::SensorResponse response;
         response.set_success(true);
@@ -90,7 +98,7 @@ grpc::Status SensorServiceImpl::InteractiveSensor(
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count());
 
-        stream->Write(response); // Langsung kirim balik balesan
+        stream->Write(response);
     }
 
     spdlog::info("[Interactive] Session closed by client");

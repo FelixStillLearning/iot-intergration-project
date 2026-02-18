@@ -8,9 +8,17 @@ cmake_install.cmake
 compile_commands.json
 CTestTestfile.cmake
 *.cmake
+Makefile
 
 # Generated sources
 /generated/
+*.pb.cc
+*.pb.h
+*.pb.cpp
+*.grpc.pb.cc
+*.grpc.pb.h
+*.pb_2_5.pb.cc
+*.pb_2_5.pb.h
 
 # Binaries and libraries
 *.o
@@ -21,19 +29,46 @@ CTestTestfile.cmake
 *.dylib
 *.dll
 *.exe
+*.out
 
 # Logs
 *.log
+logs/
 
 # Conan
 /build/conan*
+conaninfo.txt
+graph_info.json
 
 # IDE/editor
 .vscode/
 .idea/
 *.swp
 *.swo
+*.iml
 .DS_Store
+.vscode/settings.json
+
+# Environment (local overrides only)
+.env.local
+.env.*.local
+
+# Runtime artifacts (generated at runtime)
+*.lock
+
+# SonarQube
+.scannerwork/
+.sonarqube/
 
 # OS
 Thumbs.db
+.Thumbs.db
+
+# Archives
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# Node modules (if any JS tools)
+node_modules/
+package-lock.json

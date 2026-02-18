@@ -1,5 +1,4 @@
-#include "websocket/ws_server.h"
-
+#include "ws_server.h"
 #include <websocketpp/common/connection_hdl.hpp>
 #include <functional>
 
