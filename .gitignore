@@ -80,6 +80,7 @@ graph_info.json
 .DS_Store
 
 # Environment (local overrides only)
+.venv
 .env
 .env.local
 .env.*.local
