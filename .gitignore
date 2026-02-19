@@ -7,18 +7,43 @@ CMakeCache.txt
 cmake_install.cmake
 compile_commands.json
 CTestTestfile.cmake
-*.cmake
 Makefile
+CPackConfig.cmake
+CPackSourceConfig.cmake
+DartConfiguration.tcl
 
-# Generated sources
+# Conan generated files
+/build/*.cmake
+/build/CMakePresets.json
+conanfile.txt.bak
+conanbuild.sh
+conanrun.sh
+deactivate_conanbuild.sh
+deactivate_conanrun.sh
+conanbuildenv-*.sh
+conanrunenv-*.sh
+conan_toolchain.cmake
+cmakedeps_macros.cmake
+conandeps_legacy.cmake
+*-release-x86_64-data.cmake
+*-Target-release.cmake
+*Targets.cmake
+*Config.cmake
+*ConfigVersion.cmake
+*-config.cmake
+*-config-version.cmake
+Find*.cmake
+
+# Generated sources (proto — regenerated at build time)
 /generated/
 *.pb.cc
 *.pb.h
 *.pb.cpp
 *.grpc.pb.cc
 *.grpc.pb.h
-*.pb_2_5.pb.cc
-*.pb_2_5.pb.h
+
+# NOTE: IDL generated files (idl/SensorData/*) ARE tracked
+# because Docker needs them and they are regenerated inside container
 
 # Binaries and libraries
 *.o
@@ -26,17 +51,23 @@ Makefile
 *.a
 *.lib
 *.so
+*.so.*
 *.dylib
 *.dll
 *.exe
 *.out
+iot_bridge
+iot-core-objects
+
+# OpenDDS runtime artifacts
+simple.ior
+*.ior
 
 # Logs
 *.log
 logs/
 
 # Conan
-/build/conan*
 conaninfo.txt
 graph_info.json
 
@@ -47,14 +78,13 @@ graph_info.json
 *.swo
 *.iml
 .DS_Store
-.vscode/settings.json
 
 # Environment (local overrides only)
 .env
 .env.local
 .env.*.local
 
-# Runtime artifacts (generated at runtime)
+# Runtime artifacts
 *.lock
 
 # SonarQube
@@ -69,6 +99,46 @@ Thumbs.db
 *.tar.gz
 *.tar.bz2
 *.zip
+*.Zone.Identifier
+
+# Testing artifacts
+Testing/
+CTestTestfile.cmake
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
+ENV/
+*.pyc
+
+# C++ build artifacts
+*.d
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Clang tools artifacts
+.clangd/
+.cache/
+.clang-tidy
+.clang-format
+*.clang-tidy
+*.clang-format
+compile_flags.txt
+.ccls
+.ccls-cache/
+
+# Documentation generated (but keep markdown docs)
+/docs/_build/
+/docs/html/
+/docs/latex/
+/docs/doxygen/
 
 # Node modules (if any JS tools)
 node_modules/

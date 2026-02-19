@@ -27,28 +27,12 @@ public:
      * Dipanggil otomatis oleh Observable saat ada data sensor baru.
      * Log semua field sensor ke console dengan format terstruktur.
      */
-    void on_sensor_data(const iot::SensorRequest& request) override {
-        spdlog::info("┌─────────── [DataLogger] Sensor Report ───────────┐");
-        spdlog::info("│ Sensor ID      : {}",   request.sensor_id());
-        spdlog::info("│ Sensor Name    : {}",   request.sensor_name());
-        spdlog::info("│ Temperature    : {}°C", request.temperature());
-        spdlog::info("│ Humidity       : {}%",  request.humidity());
-        spdlog::info("│ Pressure       : {} hPa", request.pressure());
-        spdlog::info("│ Light Intensity: {} lux",  request.light_intensity());
-        spdlog::info("│ Timestamp      : {}",   request.timestamp());
-        spdlog::info("│ Location       : {}",   request.location());
-        spdlog::info("└─────────────────────────────────────────────────┘");
+    void on_sensor_data(const iot::SensorRequest& request) override;
 
-        ++log_count_;
-        spdlog::debug("[DataLogger] Total logged: {} messages", log_count_);
-    }
-
-    std::string observer_name() const override {
-        return "SensorDataLogHandler";
-    }
+    std::string observer_name() const override;
 
     /// Getter — berapa total data yang sudah di-log
-    int get_log_count() const { return log_count_; }
+    int get_log_count() const;
 
 private:
     int log_count_ = 0;  // Counter untuk tracking jumlah data yang di-log
