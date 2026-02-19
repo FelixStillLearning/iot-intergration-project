@@ -138,3 +138,5 @@ compile_flags.txt
 # Node modules (if any JS tools)
 node_modules/
 package-lock.json
+
+/docs
