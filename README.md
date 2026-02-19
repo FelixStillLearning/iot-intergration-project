@@ -21,6 +21,9 @@ Load env before running:
 export $(grep -v '^#' .env | xargs)
 ```
 
+Note:
+- Jangan gunakan `setenv.sh` jika path di dalamnya tidak sesuai. Gunakan `.env` dengan path OpenDDS yang benar.
+
 ## Build
 ```
 rm -rf build

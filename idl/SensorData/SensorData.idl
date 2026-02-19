@@ -1,14 +1,41 @@
+/**
+ * SensorData.idl -- Interface Definition Language untuk OpenDDS
+ * 
+ * File ini mendefinisikan struktur data yang dikirim via DDS network.
+ * IDL adalah standar OMG (Object Management Group) untuk mendefinisikan
+ * tipe data dan interface secara bahasa-netral.
+ * 
+ * Dari file ini, opendds_idl dan tao_idl men-generate:
+ *   - SensorDataC.h/.cpp       : Client-side type support
+ *   - SensorDataS.h/.cpp       : Server-side skeleton
+ *   - SensorDataTypeSupport*   : Registrasi type dan serialization
+ * 
+ * Cara generate:
+ *   ./generate_idl idl/SensorData/SensorData
+ * 
+ * Module "Messengger" berisi struct Message yang merepresentasikan
+ * satu data sensor. Struct ini di-annotate dengan @topic agar
+ * DDS tahu bahwa ini adalah tipe data yang bisa di-publish/subscribe.
+ * 
+ * PENTING: Field-field di sini harus sesuai dengan SensorRequest di .proto
+ * karena DdsAdapter mengkonversi dari protobuf ke IDL format ini.
+ */
 module Messengger {
 
+    /**
+     * @topic menandai struct ini sebagai DDS Topic type.
+     * Artinya struct ini bisa digunakan sebagai tipe data
+     * untuk publish/subscribe di DDS network.
+     */
     @topic
     struct Message {
-        long sensor_id;
-        string sensor_name;
-        double temperature;
-        double humidity;
-        double pressure;
-        double light_intensity;
-        long long timestamp;   
-        string location;
+        long sensor_id;            // ID unik sensor (32-bit integer)
+        string sensor_name;        // Nama sensor
+        double temperature;        // Suhu (Celsius)
+        double humidity;           // Kelembaban (%)
+        double pressure;           // Tekanan udara (hPa)
+        double light_intensity;    // Intensitas cahaya (lux)
+        long long timestamp;       // Waktu pengukuran (epoch ms, 64-bit)
+        string location;           // Lokasi sensor
     };
 };
