@@ -1,22 +1,56 @@
 #!/bin/bash
+###############################################################################
+# generate_idl -- Script untuk men-generate C++ code dari OpenDDS IDL file
+#
+# Script ini menjalankan 3 tool secara berurutan:
+#   1. tao_idl     : Generate C++ stubs dari .idl (TAO IDL compiler)
+#   2. opendds_idl : Generate DDS TypeSupport files (serialization/deserialization)
+#   3. tao_idl     : Generate C++ stubs dari TypeSupport.idl yang di-generate step 2
+#
+# Hasil generate:
+#   - SensorDataC.h/.cpp              : Client-side type definitions
+#   - SensorDataS.h/.cpp              : Server-side skeleton
+#   - SensorDataTypeSupportC.h/.cpp   : Type support client
+#   - SensorDataTypeSupportS.h/.cpp   : Type support server
+#   - SensorDataTypeSupportImpl.h/.cpp: Implementasi serialization
+#
+# Cara pakai:
+#   ./generate_idl idl/SensorData/SensorData
+#
+# CATATAN: Memerlukan $DDS_ROOT sudah di-set (lokasi OpenDDS)
+###############################################################################
 
+# Validasi argumen: harus ada 1 parameter (path ke IDL tanpa ekstensi)
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <FILE_NAME>"
     echo "Example: $0 idl/SensorData/SensorData"
     exit 1
 fi
 
-IDL_INPUT_PATH="$1"
-IDL_DIR=$(dirname "$IDL_INPUT_PATH")
-IDL_BASE=$(basename "$IDL_INPUT_PATH")
-IDL_FILE_NAME="${IDL_BASE}.idl"
-TYPE_SUPPORT_FILE_NAME="${IDL_BASE}TypeSupport.idl"
+# Parse path: pisahkan directory dan nama file
+IDL_INPUT_PATH="$1"                           # contoh: idl/SensorData/SensorData
+IDL_DIR=$(dirname "$IDL_INPUT_PATH")          # contoh: idl/SensorData
+IDL_BASE=$(basename "$IDL_INPUT_PATH")        # contoh: SensorData
+IDL_FILE_NAME="${IDL_BASE}.idl"               # contoh: SensorData.idl
+TYPE_SUPPORT_FILE_NAME="${IDL_BASE}TypeSupport.idl"  # contoh: SensorDataTypeSupport.idl
 
-# Run from IDL directory so includes resolve correctly
+# Pindah ke direktori IDL agar relative includes bisa resolve
 cd "$IDL_DIR" || exit 1
 
+# Step 1: tao_idl -- Generate C++ stubs dari IDL
+# Flags:
+#   -I "$DDS_ROOT"   : include path ke OpenDDS IDL definitions
+#   -Sa -St -Sm -Sci : suppress beberapa fitur yang tidak diperlukan
+#   -in              : inline mode
+#   --idl-version 4  : gunakan IDL versi 4
 tao_idl -I "$DDS_ROOT" -I . -Sa -St -Sm -Sci -in --idl-version 4 --unknown-annotations ignore "$IDL_FILE_NAME"
+
+# Step 2: opendds_idl -- Generate TypeSupport (serialization/deserialization)
+# -Gxtypes-complete : generate complete XTypes type information
 opendds_idl -I . -Gxtypes-complete "$IDL_FILE_NAME"
+
+# Step 3: tao_idl lagi -- Generate C++ stubs dari TypeSupport.idl
+# File TypeSupport.idl di-generate oleh opendds_idl di step 2
 tao_idl -I "$DDS_ROOT" -I . -Sa -St -Sm -Sci -in --idl-version 4 --unknown-annotations ignore "$TYPE_SUPPORT_FILE_NAME"
 
 echo "Execution completed."

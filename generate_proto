@@ -1,39 +1,66 @@
 #!/bin/bash
+###############################################################################
+# generate_proto -- Script untuk men-generate C++ code dari .proto file
+#
+# Script ini menjalankan protoc (protobuf compiler) untuk menghasilkan:
+#   - sensor.pb.h/.cc       : Protobuf message classes
+#   - sensor.grpc.pb.h/.cc  : gRPC service stubs
+#
+# Script mencari protoc dan grpc_cpp_plugin dari:
+#   1. System PATH (jika diinstall via apt/brew)
+#   2. Conan cache (fallback jika tidak ada di system)
+#
+# Cara pakai:
+#   cd proto
+#   ../generate_proto sensor
+#
+# CATATAN: Biasanya tidak perlu dijalankan manual karena CMakeLists.txt
+# sudah punya custom command yang otomatis generate saat build.
+###############################################################################
 
+# Validasi argumen: harus ada 1 parameter (nama file tanpa ekstensi)
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <FILE_NAME>"
     exit 1
 fi
 
-PROTO_FILE_NAME="$1.proto"
+PROTO_FILE_NAME="$1.proto"  # Tambahkan ekstensi .proto
 
-# Prefer system PATH
+# Cari protoc dari system PATH terlebih dahulu
 PROTOC="$(command -v protoc 2>/dev/null)"
 GRPC_CPP_PLUGIN="$(command -v grpc_cpp_plugin 2>/dev/null)"
 
-# Fallback to Conan cache
+# Fallback: cari di Conan cache jika tidak ada di system
+# Conan menyimpan binary di ~/.conan2/p/b/<package>/p/bin/
 PROTOC_CONAN_GLOB="/home/felixrdev/.conan2/p/b/proto*/p/bin/protoc"
 GRPC_CPP_PLUGIN_CONAN_GLOB="/home/felixrdev/.conan2/p/b/grpc*/p/bin/grpc_cpp_plugin"
 
+# Jika protoc tidak ditemukan di system, coba cari di Conan cache
 if [ -z "$PROTOC" ]; then
     PROTOC=$(ls -1 $PROTOC_CONAN_GLOB 2>/dev/null | head -n1)
 fi
 
+# Jika grpc_cpp_plugin tidak ditemukan di system, coba cari di Conan cache
 if [ -z "$GRPC_CPP_PLUGIN" ]; then
     GRPC_CPP_PLUGIN=$(ls -1 $GRPC_CPP_PLUGIN_CONAN_GLOB 2>/dev/null | head -n1)
 fi
 
+# Validasi: pastikan protoc ditemukan
 if [ ! -f "$PROTOC" ]; then
     echo "Error: Protoc not found!"
     exit 1
 fi
 
+# Validasi: pastikan grpc plugin ditemukan
 if [ ! -f "$GRPC_CPP_PLUGIN" ]; then
     echo "Error: gRPC plugin not found!"
     exit 1
 fi
 
+# Generate gRPC service stubs (sensor.grpc.pb.h/.cc)
 "$PROTOC" -I ./ --grpc_out=./ --plugin=protoc-gen-grpc="$GRPC_CPP_PLUGIN" "$PROTO_FILE_NAME"
+
+# Generate protobuf message classes (sensor.pb.h/.cc)
 "$PROTOC" -I ./ --cpp_out=. "$PROTO_FILE_NAME"
 
 echo "Execution completed."

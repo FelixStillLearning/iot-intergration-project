@@ -1,36 +1,79 @@
+/**
+ * sensor.proto -- Definisi gRPC Service dan Message untuk IoT Sensor
+ * 
+ * File ini mendefinisikan:
+ *   1. SensorService  : gRPC service dengan 4 jenis RPC
+ *   2. SensorRequest   : format data sensor yang dikirim client
+ *   3. SensorResponse  : format response dari server
+ * 
+ * Dari file ini, protoc (protobuf compiler) men-generate:
+ *   - sensor.pb.h/.cc       : class C++ untuk SensorRequest dan SensorResponse
+ *   - sensor.grpc.pb.h/.cc  : class C++ untuk SensorService (stub + service)
+ * 
+ * Cara generate:
+ *   ./generate_proto proto/sensor
+ *   atau otomatis saat cmake build (lihat CMakeLists.txt)
+ */
+
 syntax = "proto3";
 
+// Package "iot" -- namespace untuk semua message dan service
+// Di C++ menjadi namespace iot:: (contoh: iot::SensorRequest)
 package iot;
-//service definition untuk gateaway
+
+/**
+ * SensorService -- gRPC Service untuk gateway sensor
+ * 
+ * Menyediakan 4 jenis komunikasi gRPC:
+ *   1. Unary         : request-response sederhana (1 kirim, 1 balas)
+ *   2. Client Stream : client kirim banyak data, server balas 1 rangkuman
+ *   3. Server Stream : client kirim 1 request, server balas data berkala
+ *   4. Bidirectional : client dan server saling kirim secara real-time
+ */
 service SensorService {
-  // 1. Unary: Kirim satu data, terima satu respon
+  // 1. Unary RPC: Kirim satu data sensor, terima satu respon
+  //    Cocok untuk: pengiriman data sensor satu per satu
   rpc SendSensorData (SensorRequest) returns (SensorResponse);
 
-  // 2. Client Streaming: Kirim banyak data, terima satu ringkasan
+  // 2. Client Streaming: Kirim banyak data sekaligus, terima satu ringkasan
+  //    Cocok untuk: batch upload data sensor dari buffer
   rpc StreamSensorData (stream SensorRequest) returns (SensorResponse);
 
-  // 3. Server Streaming: Kirim satu perintah, terima data kontinu
+  // 3. Server Streaming: Kirim satu perintah monitor, terima data kontinu
+  //    Cocok untuk: real-time monitoring satu sensor tertentu
   rpc MonitorSensor (SensorRequest) returns (stream SensorResponse);
 
-  // 4. Bidirectional: Komunikasi dua arah real-time
+  // 4. Bidirectional Streaming: Komunikasi dua arah real-time
+  //    Cocok untuk: sesi interaktif (kirim data, langsung dapat response)
   rpc InteractiveSensor (stream SensorRequest) returns (stream SensorResponse);
 }
 
+/**
+ * SensorRequest -- Data sensor yang dikirim dari client ke server
+ * 
+ * Berisi semua informasi yang diukur oleh sensor fisik.
+ * Field number (1-8) adalah identifier unik untuk serialization protobuf.
+ * PENTING: jangan ubah field number yang sudah ada (backward compatibility).
+ */
 message SensorRequest {
-    int32 sensor_id = 1;
-    string sensor_name = 2;
-    double temperature = 3;
-    double humidity = 4;
-    double pressure = 5;
-    double light_intensity = 6;
-    //waktu data sensor didapat kapan
-    int64 timestamp = 7;
-    string location = 8;
+    int32 sensor_id = 1; // ID unik sensor (contoh: 1, 2, 3)
+    string sensor_name = 2; // Nama sensor (contoh: "DHT22", "BMP280")
+    double temperature = 3; // Suhu dalam Celsius
+    double humidity = 4; // Kelembaban dalam persen (0-100)
+    double pressure = 5; // Tekanan udara dalam hPa
+    double light_intensity = 6; // Intensitas cahaya dalam lux
+    int64 timestamp = 7; // Waktu data sensor diambil (epoch milliseconds)
+    string location = 8; // Lokasi sensor (contoh: "Ruang Server A")
 }
 
+/**
+ * SensorResponse -- Response dari server ke client
+ * 
+ * Dikirim setelah server memproses data sensor.
+ * Berisi status (berhasil/gagal), pesan, dan waktu pemrosesan.
+ */
 message SensorResponse {
-    bool success = 1;    
-    string message = 2;
-    //lamanya waktu data di proses
-    int64 processed_timestamp = 3;
+    bool success = 1; // true jika data berhasil diproses
+    string message = 2; // Pesan deskriptif dari server
+    int64 processed_timestamp = 3; // Waktu server selesai memproses (epoch ms)
 }
