@@ -1,28 +1,47 @@
+###############################################################################
+# docker-compose.yaml -- Konfigurasi Docker Compose untuk IoT Bridge
+#
+# File ini mendefinisikan service yang dijalankan menggunakan Docker Compose.
+# Saat ini hanya ada 1 service: iot-bridge.
+#
+# Cara pakai:
+#   docker-compose up -d         (jalankan di background)
+#   docker-compose logs -f       (lihat log real-time)
+#   docker-compose down          (hentikan semua service)
+#
+# Konfigurasi dibaca dari file .env di root project.
+# Contoh isi .env:
+#   GRPC_HOST=0.0.0.0
+#   GRPC_PORT=50051
+#   WS_PORT=9002
+#   DDS_DOMAIN=0
+#   LOG_LEVEL=info
+#   DDS_CONFIG_FILE=rtps.ini
+#   TEST_TOPIC=TestData_Msg
+###############################################################################
+
 services:
   # Service Utama: IoT Bridge (gRPC + WebSocket + DDS RTPS)
+  # Menjalankan binary iot_bridge yang menggabungkan ketiga protokol
   iot-bridge:
     build: 
-      context: .
+      context: .           # Build context: root project
       dockerfile: Dockerfile
-    image: iot-bridge-app:v1.0
-    container_name: iot_bridge_container
+    image: iot-bridge-app:v1.0   # Nama image yang dihasilkan
+    container_name: iot_bridge_container  # Nama container (mudah diidentifikasi)
     env_file:
-      - .env
-    ports:
-      - "${GRPC_PORT}:${GRPC_PORT}"
-      - "${WS_PORT}:${WS_PORT}"
+      - .env               # Baca environment variables dari file .env
+    # Gunakan host network untuk OpenDDS RTPS multicast discovery
+    # Dengan host network, container berbagi network stack dengan host
+    # sehingga OpenDDS Monitor bisa melihat topics dan endpoints
+    network_mode: host
     environment:
-      - GRPC_HOST=${GRPC_HOST}
-      - GRPC_PORT=${GRPC_PORT}
-      - WS_PORT=${WS_PORT}
-      - DDS_DOMAIN=${DDS_DOMAIN}
-      - LOG_LEVEL=${LOG_LEVEL}
-      - DDS_CONFIG_FILE=${DDS_CONFIG_FILE}
-      - TEST_TOPIC=${TEST_TOPIC}
-    networks:
-      - iot-internal-network
-    restart: always
-
-networks:
-  iot-internal-network:
-    driver: bridge
+      # Override/set environment variables di dalam container
+      - GRPC_HOST=${GRPC_HOST}           # IP binding gRPC server
+      - GRPC_PORT=${GRPC_PORT}           # Port gRPC (default: 50051)
+      - WS_PORT=${WS_PORT}               # Port WebSocket (default: 9002)
+      - DDS_DOMAIN=${DDS_DOMAIN}         # DDS domain ID
+      - LOG_LEVEL=${LOG_LEVEL}           # Log level (trace/debug/info/warn/error)
+      - DDS_CONFIG_FILE=${DDS_CONFIG_FILE}  # Path konfigurasi RTPS
+      - TEST_TOPIC=${TEST_TOPIC}         # Nama DDS topic
+    restart:  always           # Auto-restart jika crash

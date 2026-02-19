@@ -1,3 +1,17 @@
+###############################################################################
+# docker/CMakeLists.txt -- Build Configuration khusus Docker
+#
+# File ini adalah SALINAN dari CMakeLists.txt di root project,
+# tetapi disesuaikan untuk build di dalam Docker container.
+#
+# Perbedaan utama dengan root CMakeLists.txt:
+#   - Path mungkin berbeda karena Docker environment
+#   - OpenDDS di-build dari source di /opt/OpenDDS
+#   - Conan dependencies diinstall ke /app/build
+#
+# File ini di-COPY ke /app/CMakeLists.txt saat Docker build (lihat Dockerfile).
+###############################################################################
+
 cmake_minimum_required(VERSION 3.31.0)
 project(iot-integration-project VERSION 0.1.0 LANGUAGES C CXX)
 
