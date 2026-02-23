@@ -83,9 +83,3 @@ Notes:
 3. Subscribe to the topic configured in `.env` (`TEST_TOPIC`).
 4. Send gRPC requests and verify DDS data is published.
 
-## Optional CLI Test (grpcurl)
-If you have grpcurl installed:
-```
-grpcurl -plaintext -d '{"sensor_id":1,"sensor_name":"sensor-1","temperature":25.5,"humidity":60.2,"pressure":1013.2,"light_intensity":300.5,"timestamp":1700000000,"location":"lab"}' \
-  ${GRPC_HOST:-0.0.0.0}:${GRPC_PORT:-50051} iot.SensorService/SendSensorData
-```
